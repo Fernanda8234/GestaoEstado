@@ -14,6 +14,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableDoubleStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -31,26 +32,21 @@ import com.example.gestaoestado.components.CaixaDeEntrada
 import com.example.gestaoestado.components.CardResultado
 
 @Composable
-fun JurosScreen(modifier: Modifier = Modifier) {
-    var capital by remember {
-        mutableStateOf("")
-    }
+fun JurosScreen(
+    modifier: Modifier = Modifier,
+    jurosScreenViewModel: JurosScreenViewModel
+) {
 
-    var taxa by remember {
-        mutableStateOf("")
-    }
+//    var capital by remember { mutableStateOf("") }
+    val capital by jurosScreenViewModel.capital.observeAsState(initial = "")
 
-    var tempo by remember {
-        mutableStateOf("")
-    }
+    val taxa by jurosScreenViewModel.taxa.observeAsState(initial = "")
 
-    var juros by remember {
-        mutableDoubleStateOf(0.0)
-    }
+    val tempo by jurosScreenViewModel.tempo.observeAsState(initial = "")
 
-    var montante by remember {
-        mutableDoubleStateOf(0.0)
-    }
+    val juros by jurosScreenViewModel.juros.observeAsState(initial = 0.0)
+
+    val montante by jurosScreenViewModel.montante.observeAsState(initial = 0.0)
 
     Column (
         modifier = modifier.fillMaxSize(),
@@ -114,7 +110,7 @@ fun JurosScreen(modifier: Modifier = Modifier) {
                             keyboardType = KeyboardType.Decimal,
                             value = capital,
                             atualizarValor = {
-                                capital = it
+                                jurosScreenViewModel.onCapitalChaged(it)
                             }
                         )// { capital = it } é a mesma coisa da de cima
 
@@ -125,7 +121,7 @@ fun JurosScreen(modifier: Modifier = Modifier) {
                             keyboardType = KeyboardType.Decimal,
                             value = taxa,
                             atualizarValor = {
-                                taxa = it
+                                jurosScreenViewModel.onTaxaChaged(it)
                             }
                         )
 
@@ -135,21 +131,15 @@ fun JurosScreen(modifier: Modifier = Modifier) {
                             placeholder = "Qual o tempo em meses?",
                             keyboardType = KeyboardType.Decimal,
                             value = tempo,
-                            atualizarValor = { tempo = it } // tbm é um manipulador de dados como o debaixo
+                            atualizarValor = {
+                                jurosScreenViewModel.onTempoChaged(it)
+                            } // tbm é um manipulador de dados como o debaixo
                         )
 
                         Button(
                             onClick = {
-                                juros = calcularJuros(
-                                    capital = capital.toDouble(),
-                                    taxa = taxa.toDouble(),
-                                    tempo = tempo.toDouble()
-                                )
-
-                                montante = calcularMontante(
-                                    capital = capital.toDouble(),
-                                    juros = juros
-                                )
+                                jurosScreenViewModel.calcularJurosInvestimento()
+                                jurosScreenViewModel.calcularMontanteInvestimento()
                             },
                             modifier = Modifier.fillMaxWidth()
                                 .height(48.dp)
